@@ -142,10 +142,3 @@ Componentes incluidos:
 ## Legacy
 
 Los scripts de netinstall anteriores siguen en `installer/build-netinstall.sh` y `installer/profiles/`, pero la ruta principal ahora es la ISO live.
-
-## Siguiente paso lógico
-
-Si quieres, en la siguiente iteración hago una de estas dos cosas:
-
-1. ejecutar el build live completo aquí y revisar el resultado;
-2. ajustar detalles finos para el MacBook Pro 2012: GPU, suspensión, brillo, teclado y trackpad.
