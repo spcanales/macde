@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Drivers and Firmware
+Name[es]=Controlador y Firmware
+Comment=Detect and install missing firmware packages
+Comment[es]=Detecta e instala firmware faltante
+Exec=macde-drivers
+Icon=preferences-system
+Terminal=false
+Categories=Settings;System;
+Keywords=drivers;firmware;hardware;isenkram;
+StartupNotify=true

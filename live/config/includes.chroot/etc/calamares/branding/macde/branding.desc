@@ -14,11 +14,11 @@ strings:
     versionedName:       MacDE on Debian 12 Bookworm
     shortVersionedName:  MacDE 12
     bootloaderEntryName: MacDE
-    productUrl:          https://www.debian.org
-    supportUrl:          https://www.debian.org/support
-    knownIssuesUrl:      https://bugs.debian.org
-    releaseNotesUrl:     https://www.debian.org/releases/bookworm/releasenotes
-    donateUrl:           https://www.debian.org
+    productUrl:          https://github.com/spcanales/macde
+    supportUrl:          https://github.com/spcanales/macde
+    knownIssuesUrl:      https://github.com/spcanales/macde/issues
+    releaseNotesUrl:     https://github.com/spcanales/macde/releases
+    donateUrl:           https://github.com/spcanales/macde
 
 images:
     productLogo:         "macde-logo.svg"

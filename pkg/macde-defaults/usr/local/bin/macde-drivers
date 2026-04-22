@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+DRIVER_HELPER="/usr/sbin/isenkram-autoinstall-firmware"
+
+if [ ! -x "$DRIVER_HELPER" ]; then
+  if command -v kdialog >/dev/null 2>&1; then
+    kdialog --error "isenkram no está instalado."
+  fi
+  exit 1
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
+  exec "$DRIVER_HELPER"
+fi
+
+if command -v pkexec >/dev/null 2>&1; then
+  exec pkexec "$DRIVER_HELPER"
+fi
+
+exec x-terminal-emulator -e sudo "$DRIVER_HELPER"

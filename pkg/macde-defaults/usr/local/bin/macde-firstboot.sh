@@ -3,8 +3,10 @@ set -eu
 
 BASE_MARKER="$HOME/.local/state/macde/base-layout.done"
 WHITESUR_MARKER="$HOME/.local/state/macde/whitesur.done"
-WALLPAPER_FILE="/usr/share/macde/wallpapers/sunrise.svg"
+WALLPAPER_FILE="/usr/share/macde/wallpapers/mountain.svg"
 WHITESUR_THEME_ID="com.github.vinceliuice.WhiteSur"
+INSTALLER_DESKTOP_SOURCE="/usr/share/applications/install-debian.desktop"
+INSTALLER_DESKTOP_NAME="Install MacDE.desktop"
 GTK3_DIR="$HOME/.config/gtk-3.0"
 GTK4_DIR="$HOME/.config/gtk-4.0"
 KVANTUM_DIR="$HOME/.config/Kvantum"
@@ -21,6 +23,17 @@ fi
 if [ -d "/usr/share/plasma/look-and-feel/$WHITESUR_THEME_ID" ] && [ ! -f "$WHITESUR_MARKER" ]; then
   WHITESUR_PENDING=1
 fi
+
+ensure_installer_shortcut() {
+  [ -f "$INSTALLER_DESKTOP_SOURCE" ] || return 0
+  for desktop_dir in "$HOME/Desktop" "$HOME/Escritorio"; do
+    mkdir -p "$desktop_dir"
+    cp -f "$INSTALLER_DESKTOP_SOURCE" "$desktop_dir/$INSTALLER_DESKTOP_NAME"
+    chmod +x "$desktop_dir/$INSTALLER_DESKTOP_NAME" || true
+  done
+}
+
+ensure_installer_shortcut
 
 if [ "$BASE_PENDING" -eq 0 ] && [ "$WHITESUR_PENDING" -eq 0 ]; then
   exit 0
@@ -45,7 +58,28 @@ fi
 layout_applied() {
   [ -n "$QDBUS_CMD" ] || return 1
   "$QDBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.dumpCurrentLayoutJS 2>/dev/null \
-    | grep -q "org.kde.plasma.appmenu"
+    | grep -Eq "preferred://browser|vlc.desktop"
+}
+
+apply_wallpaper() {
+  if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
+    plasma-apply-wallpaperimage "$WALLPAPER_FILE" || true
+  fi
+}
+
+apply_layout() {
+  [ -n "$QDBUS_CMD" ] || return 0
+  [ -f "/usr/share/macde/layouts/macde-layout.js" ] || return 0
+
+  for _try in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    if "$QDBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.dumpCurrentLayoutJS >/dev/null 2>&1; then
+      "$QDBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$(cat /usr/share/macde/layouts/macde-layout.js)" >/dev/null 2>&1 || true
+      if layout_applied; then
+        break
+      fi
+    fi
+    sleep 2
+  done
 }
 
 if [ "$BASE_PENDING" -eq 1 ]; then
@@ -58,21 +92,8 @@ if [ "$BASE_PENDING" -eq 1 ]; then
     "$KWRITECONFIG" --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight "" || true
   fi
 
-  if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
-    plasma-apply-wallpaperimage "$WALLPAPER_FILE" || true
-  fi
-
-  if [ -n "$QDBUS_CMD" ] && [ -f "/usr/share/macde/layouts/macde-layout.js" ]; then
-    for _try in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-      if "$QDBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.dumpCurrentLayoutJS >/dev/null 2>&1; then
-        "$QDBUS_CMD" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$(cat /usr/share/macde/layouts/macde-layout.js)" >/dev/null 2>&1 || true
-        if layout_applied; then
-          break
-        fi
-      fi
-      sleep 2
-    done
-  fi
+  apply_wallpaper
+  apply_layout
 
   if layout_applied || [ -z "$QDBUS_CMD" ]; then
     touch "$BASE_MARKER"
@@ -118,6 +139,9 @@ EOF
 [General]
 theme=WhiteSur
 EOF
+
+  apply_wallpaper
+  apply_layout
 
   touch "$WHITESUR_MARKER"
 fi

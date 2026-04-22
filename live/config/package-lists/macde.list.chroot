@@ -1,9 +1,10 @@
 sudo
+acpid
 ark
+brightnessctl
 curl
 ca-certificates
 dolphin-plugins
-elisa
 ffmpegthumbs
 filelight
 firefox-esr
@@ -28,6 +29,7 @@ partitionmanager
 pipewire-audio
 plasma-browser-integration
 plasma-desktop
+plasma-discover
 plasma-nm
 plasma-pa
 plasma-workspace
@@ -36,6 +38,7 @@ bluedevil
 dolphin
 print-manager
 sddm
+synaptic
 user-setup
 systemsettings
 kde-config-gtk-style
@@ -46,11 +49,16 @@ xserver-xorg
 xwayland
 kwin-x11
 xdg-desktop-portal-kde
+xserver-xorg-input-synaptics
 appmenu-gtk-module-common
 appmenu-gtk2-module
 appmenu-gtk3-module
 qt5-style-kvantum
 wireplumber
+vlc
+isenkram
+isenkram-cli
+libinput-tools
 linux-headers-amd64
 dkms
 broadcom-sta-common
