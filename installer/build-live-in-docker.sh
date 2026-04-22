@@ -2,6 +2,20 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILDER_IMAGE="${MACDE_LIVE_BUILDER_IMAGE:-macde/live-builder:bookworm-amd64}"
+DOCKER_CACHE_DIR="$ROOT_DIR/build/docker-cache"
+APT_CACHE_DIR="$DOCKER_CACHE_DIR/apt-cache"
+APT_LISTS_DIR="$DOCKER_CACHE_DIR/apt-lists"
+LB_CACHE_DIR="$DOCKER_CACHE_DIR/live-build-cache"
+THEME_CACHE_DIR="$DOCKER_CACHE_DIR/theme-cache"
+DOCKER_CONFIG="${DOCKER_CONFIG:-$ROOT_DIR/build/docker-config}"
+
+mkdir -p "$APT_CACHE_DIR" "$APT_LISTS_DIR" "$LB_CACHE_DIR" "$THEME_CACHE_DIR" "$DOCKER_CONFIG"
+export DOCKER_CONFIG
+
+if [ "${MACDE_DOCKER_REBUILD:-0}" = "1" ] || ! docker image inspect "$BUILDER_IMAGE" >/dev/null 2>&1; then
+  "$ROOT_DIR/installer/build-live-builder-image.sh"
+fi
 
 docker run --rm \
   --privileged \
@@ -16,61 +30,16 @@ docker run --rm \
   -e WHITE_SUR_ICONS_URL="${WHITE_SUR_ICONS_URL:-}" \
   -e WHITE_SUR_CURSORS_URL="${WHITE_SUR_CURSORS_URL:-}" \
   -e WHITE_SUR_GTK_URL="${WHITE_SUR_GTK_URL:-}" \
+  -e MACDE_LB_CACHE_DIR=/cache/live-build \
+  -e MACDE_THEME_CACHE_DIR=/cache/theme \
   -v "$ROOT_DIR:/work" \
-  debian:bookworm \
+  -v "$APT_CACHE_DIR:/var/cache/apt" \
+  -v "$APT_LISTS_DIR:/var/lib/apt/lists" \
+  -v "$LB_CACHE_DIR:/cache/live-build" \
+  -v "$THEME_CACHE_DIR:/cache/theme" \
+  "$BUILDER_IMAGE" \
   bash -lc '
-    export DEBIAN_FRONTEND=noninteractive
     BUILD_ROOT=/tmp/macde-build
-
-    apt-get update
-    apt-get install -y \
-      ca-certificates \
-      curl \
-      debootstrap \
-      debhelper \
-      dpkg-dev \
-      dosfstools \
-      gnupg \
-      grub-efi-amd64-bin \
-      grub-pc-bin \
-      live-build \
-      mtools \
-      rsync \
-      squashfs-tools \
-      xorriso
-
-    # Evita la purga de "temporary packages" de live-build.
-    # En esta receta termina removiendo paquetes críticos del live (incluido user-setup).
-    LB_PKG_FN=/usr/share/live/build/functions/packages.sh
-    perl -0777 -i -pe "s@Remove_packages \\(\\)\\n\\{.*?\\n\\}\\n\\n@Remove_packages ()\\n{\\n\\treturn\\n}\\n\\n@s" "$LB_PKG_FN"
-
-    awk "/^Remove_packages \\(\\)\$/{f=1} f{print} /^Install_packages \\(\\)\$/{exit}" "$LB_PKG_FN" > /tmp/remove_packages.fn
-    grep -q "^[[:space:]]*return$" /tmp/remove_packages.fn
-    if grep -q "apt-get remove\\|aptitude purge\\|aptitude remove" /tmp/remove_packages.fn; then
-      echo "ERROR: Remove_packages no quedó neutralizado" >&2
-      exit 1
-    fi
-
-    # Defensa adicional: evitar cualquier invocación directa a Remove_packages
-    # desde scripts de etapas que disparan purga agresiva.
-    for LB_STAGE in \
-      /usr/lib/live/build/chroot_archives \
-      /usr/lib/live/build/chroot_package-lists \
-      /usr/lib/live/build/chroot_preseed \
-      /usr/lib/live/build/installer_debian-installer
-    do
-      sed -i "s/^\\([[:space:]]*\\)Remove_packages\$/\\1: # macde skip temp package removal/" "$LB_STAGE"
-    done
-
-    if grep -Rsn "^[[:space:]]*Remove_packages\$" \
-      /usr/lib/live/build/chroot_archives \
-      /usr/lib/live/build/chroot_package-lists \
-      /usr/lib/live/build/chroot_preseed \
-      /usr/lib/live/build/installer_debian-installer >/dev/null
-    then
-      echo "ERROR: aún hay llamadas directas a Remove_packages en scripts de etapa" >&2
-      exit 1
-    fi
 
     rm -rf "$BUILD_ROOT"
     mkdir -p "$BUILD_ROOT" /work/build/images/live

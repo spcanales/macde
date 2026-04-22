@@ -17,6 +17,7 @@ Starter kit para construir una ISO live `amd64` basada en Debian + KDE Plasma, o
 - `live/config/includes.chroot/etc/calamares`: branding y ajustes del instalador gráfico.
 - `pkg/macde-defaults`: paquete `.deb` con defaults de Plasma/SDDM y script de primer arranque.
 - `installer/build-live.sh`: build nativo con `live-build`.
+- `installer/build-live-builder-image.sh`: crea/actualiza la imagen Docker de build (`linux/amd64`) con dependencias preinstaladas.
 - `installer/build-live-in-docker.sh`: build desde macOS usando Docker con contenedor Debian `linux/amd64`.
 - `installer/clean-build.sh`: limpia artefactos temporales grandes y conserva la ISO por defecto.
 
@@ -65,24 +66,42 @@ sudo apt-get install -y live-build debootstrap dpkg-dev debhelper xorriso squash
 Build nativo sobre Linux:
 
 ```bash
-cd /ruta/a/macde-netinstall
+cd /ruta/a/macde
 ./installer/build-live.sh
 ```
 
-Build desde macOS con Docker:
+Build desde macOS con Docker (primer uso):
 
 ```bash
-cd /ruta/a/macde-netinstall
+cd /ruta/a/macde
+./installer/build-live-builder-image.sh
+```
+
+Build incremental desde macOS con Docker:
+
+```bash
+cd /ruta/a/macde
 ./installer/build-live-in-docker.sh
 ```
 
-Ese flujo usa un contenedor Debian `linux/amd64` con `--privileged`, porque `live-build` necesita montar y generar la imagen dentro del contenedor.
-En un Mac Apple Silicon este build es notablemente más lento por la emulación `amd64`.
+Ese flujo usa una imagen builder persistente + cachés en `build/docker-cache/`:
+
+- `apt-cache` y `apt-lists` (no reinstala dependencias cada build)
+- `live-build-cache` (reutiliza paquetes del rootfs live)
+- `theme-cache` (reutiliza tarballs WhiteSur)
+
+En Mac Apple Silicon, la emulación `amd64` sigue siendo más lenta que en host x86_64.
+
+Si cambias dependencias del builder y quieres forzar rebuild de imagen:
+
+```bash
+MACDE_DOCKER_REBUILD=1 ./installer/build-live-in-docker.sh
+```
 
 Si solo quieres validar la configuración sin construir la ISO completa:
 
 ```bash
-cd /ruta/a/macde-netinstall
+cd /ruta/a/macde
 MACDE_SKIP_LB_BUILD=1 ./installer/build-live-in-docker.sh
 ```
 
@@ -94,14 +113,14 @@ Salida esperada:
 Limpieza segura del workspace de build:
 
 ```bash
-cd /ruta/a/macde-netinstall
+cd /ruta/a/macde
 ./installer/clean-build.sh
 ```
 
 Para borrar tambien las ISOs generadas:
 
 ```bash
-cd /ruta/a/macde-netinstall
+cd /ruta/a/macde
 ./installer/clean-build.sh --all
 ```
 
@@ -115,7 +134,7 @@ Al arrancar la ISO:
 
 ## WhiteSur
 
-WhiteSur ya no es una fase manual posterior: el build live lo instala durante la construcción de la imagen. El helper [macde-install-whitesur.sh](/Users/sergio/Downloads/linux/macde-netinstall/pkg/macde-defaults/usr/share/macde/bin/macde-install-whitesur.sh) se mantiene por si quieres reinstalar o retocar el tema después.
+WhiteSur ya no es una fase manual posterior: el build live lo instala durante la construcción de la imagen. El helper `pkg/macde-defaults/usr/share/macde/bin/macde-install-whitesur.sh` se mantiene por si quieres reinstalar o retocar el tema después.
 
 Componentes incluidos:
 
@@ -133,7 +152,7 @@ Componentes incluidos:
 
 ## Límites actuales
 
-- Los assets de WhiteSur se descargan en build-time, no se guardan en el repo.
+- Los assets de WhiteSur y cachés del build Docker quedan en `build/docker-cache/` (no se versionan).
 - El layout está diseñado para Plasma 5/Bookworm y puede requerir ajustes menores en Plasma 6.
 - El live instala WhiteSur para Plasma, iconos, cursores y SDDM. La capa GTK no queda preinstalada en este build headless para no volver frágil la generación de la ISO.
 - No probé todavía la instalación real sobre el MacBookPro9,1 concreto; la parte más sensible seguirá siendo Broadcom + GPU dual.

@@ -15,6 +15,8 @@ MACDE_ARCH="${MACDE_ARCH:-amd64}"
 MACDE_DIST="${MACDE_DIST:-bookworm}"
 MACDE_SKIP_LB_BUILD="${MACDE_SKIP_LB_BUILD:-0}"
 IMAGE_NAME="${IMAGE_NAME:-macde-live-$MACDE_ARCH}"
+THEME_CACHE_DIR="${MACDE_THEME_CACHE_DIR:-$BUILD_DIR/theme-cache}"
+LB_CACHE_DIR="${MACDE_LB_CACHE_DIR:-}"
 
 WHITE_SUR_KDE_URL="${WHITE_SUR_KDE_URL:-https://github.com/vinceliuice/WhiteSur-kde/archive/refs/heads/master.tar.gz}"
 WHITE_SUR_ICONS_URL="${WHITE_SUR_ICONS_URL:-https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.tar.gz}"
@@ -31,8 +33,19 @@ require_cmd() {
 download_theme() {
   local url="$1"
   local output="$2"
-  echo "==> Descargando $(basename "$output")"
-  curl -fsSL "$url" -o "$output"
+  local cache_name
+  cache_name="$(basename "$output")"
+  local cache_file="$THEME_CACHE_DIR/$cache_name"
+
+  mkdir -p "$THEME_CACHE_DIR"
+  if [ -s "$cache_file" ]; then
+    echo "==> Reutilizando $cache_name"
+  else
+    echo "==> Descargando $cache_name"
+    curl -fsSL "$url" -o "$cache_file"
+  fi
+
+  cp "$cache_file" "$output"
 }
 
 require_cmd curl
@@ -41,6 +54,12 @@ require_cmd lb
 
 rm -rf "$LIVE_WORK_DIR"
 mkdir -p "$BUILD_DIR" "$LIVE_CONFIG_PACKAGES_DIR" "$LIVE_VENDOR_DIR" "$IMAGE_OUTPUT_DIR"
+
+if [ -n "$LB_CACHE_DIR" ] && [ -d "$LB_CACHE_DIR" ]; then
+  echo "==> Restaurando cache live-build"
+  mkdir -p "$LIVE_WORK_DIR/cache"
+  rsync -a --delete "$LB_CACHE_DIR"/ "$LIVE_WORK_DIR/cache"/
+fi
 
 echo "==> Empaquetando macde-defaults"
 rm -f "$OUTPUT_DEB"
@@ -63,6 +82,8 @@ lb config \
   --architecture "$MACDE_ARCH" \
   --distribution "$MACDE_DIST" \
   --archive-areas "main contrib non-free non-free-firmware" \
+  --cache true \
+  --cache-packages true \
   --binary-images iso-hybrid \
   --bootloaders "syslinux,grub-efi" \
   --firmware-chroot false \
@@ -80,6 +101,12 @@ fi
 
 echo "==> Construyendo ISO live"
 lb build
+
+if [ -n "$LB_CACHE_DIR" ] && [ -d "$LIVE_WORK_DIR/cache" ]; then
+  echo "==> Guardando cache live-build"
+  mkdir -p "$LB_CACHE_DIR"
+  rsync -a --delete "$LIVE_WORK_DIR/cache"/ "$LB_CACHE_DIR"/
+fi
 
 ISO_PATH="$(find "$LIVE_WORK_DIR" -maxdepth 1 -name '*.iso' | head -n 1)"
 
