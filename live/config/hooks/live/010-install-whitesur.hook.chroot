@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Deshabilitado en build live: en entorno amd64 emulado sobre ARM
+# termina gatillando limpieza agresiva de paquetes y rompe Plasma.
+# El look se aplica por defaults seguros en primer inicio.
+# MACDE_HEADLESS=1 /usr/share/macde/bin/macde-install-whitesur.sh
+
+rm -rf /usr/share/macde/vendor
+rm -rf /var/lib/apt/lists/*

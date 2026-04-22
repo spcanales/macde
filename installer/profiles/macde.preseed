@@ -1,0 +1,11 @@
+# Mantiene la instalacion bastante limpia y evita tareas pesadas por defecto.
+d-i debconf/priority string high
+d-i pkgsel/upgrade select none
+d-i pkgsel/install-language-support boolean false
+d-i apt-setup/contrib boolean true
+d-i apt-setup/non-free boolean true
+d-i apt-setup/non-free-firmware boolean true
+d-i hw-detect/load_firmware boolean true
+tasksel tasksel/first multiselect standard
+popularity-contest popularity-contest/participate boolean false
+d-i finish-install/reboot_in_progress note

@@ -1,0 +1,35 @@
+---
+componentName:   macde
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 820px,540px
+windowPlacement: center
+
+strings:
+    productName:         MacDE
+    shortProductName:    MacDE
+    version:             Debian 12 Bookworm
+    shortVersion:        12
+    versionedName:       MacDE on Debian 12 Bookworm
+    shortVersionedName:  MacDE 12
+    bootloaderEntryName: MacDE
+    productUrl:          https://www.debian.org
+    supportUrl:          https://www.debian.org/support
+    knownIssuesUrl:      https://bugs.debian.org
+    releaseNotesUrl:     https://www.debian.org/releases/bookworm/releasenotes
+    donateUrl:           https://www.debian.org
+
+images:
+    productLogo:         "macde-logo.svg"
+    productIcon:         "macde-logo.svg"
+    productWelcome:      "welcome.svg"
+
+slideshow:               "show.qml"
+
+style:
+   sidebarBackground:    "#e6ddd1"
+   sidebarText:          "#2a241e"
+   sidebarTextSelect:    "#9f6c4b"
+
+slideshowAPI: 2

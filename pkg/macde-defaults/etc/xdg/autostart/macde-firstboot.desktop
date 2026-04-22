@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MacDE Session Init
+Comment=Apply MacDE defaults and optional themes during KDE session start
+Exec=/usr/local/bin/macde-firstboot.sh
+OnlyShowIn=KDE;
+X-KDE-AutostartScript=true
+NoDisplay=true

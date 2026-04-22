@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+TARGET="/target"
+EXTRA_DEB="/cdrom/extras/macde-defaults_all.deb"
+
+if [ -f "$EXTRA_DEB" ]; then
+  cp "$EXTRA_DEB" "$TARGET/root/macde-defaults_all.deb"
+  chroot "$TARGET" dpkg -i /root/macde-defaults_all.deb || true
+  chroot "$TARGET" apt-get -y -f install
+  rm -f "$TARGET/root/macde-defaults_all.deb"
+fi
+
+chroot "$TARGET" systemctl enable sddm.service || true
+chroot "$TARGET" systemctl enable NetworkManager.service || true
+chroot "$TARGET" systemctl enable tlp.service || true
+chroot "$TARGET" systemctl enable mbpfan.service || true
+chroot "$TARGET" update-initramfs -u || true

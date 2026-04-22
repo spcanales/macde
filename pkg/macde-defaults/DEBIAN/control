@@ -1,0 +1,9 @@
+Package: macde-defaults
+Version: 0.1.0
+Section: x11
+Priority: optional
+Architecture: all
+Maintainer: Sergio <sergio@example.com>
+Description: KDE Plasma defaults for a macOS-inspired Debian install
+ Applies a lightweight Plasma layout with a top panel, centered dock,
+ left-side window buttons, and a clean light wallpaper on first login.

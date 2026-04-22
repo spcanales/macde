@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install MacDE
+GenericName=MacDE Installer
+Exec=install-debian
+Comment=Install MacDE from the live session
+Keywords=calamares;system;install;macde;installer
+Icon=macde-installer
+Terminal=false
+Categories=Qt;System;
+StartupWMClass=calamares
+StartupNotify=true
