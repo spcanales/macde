@@ -84,11 +84,36 @@ cd /ruta/a/macde
 ./installer/build-live-in-docker.sh
 ```
 
-Ese flujo usa una imagen builder persistente + cachés en `build/docker-cache/`:
+Por defecto usa contenedor `linux/amd64` persistente (`macde-live-builder-amd64`) + cachés en `build/docker-cache/`:
 
 - `apt-cache` y `apt-lists` (no reinstala dependencias cada build)
 - `live-build-cache` (reutiliza paquetes del rootfs live)
 - `theme-cache` (reutiliza tarballs WhiteSur)
+- `workdir` (reutiliza el árbol de build dentro del contenedor)
+
+Recrear el contenedor persistente (por ejemplo, si cambiaste Dockerfile/base):
+
+```bash
+MACDE_DOCKER_RECREATE=1 ./installer/build-live-in-docker.sh
+```
+
+Forzar modo efímero (como antes, `docker run --rm`):
+
+```bash
+MACDE_DOCKER_PERSISTENT=0 ./installer/build-live-in-docker.sh
+```
+
+Cambiar nombre del contenedor persistente:
+
+```bash
+MACDE_LIVE_BUILDER_CONTAINER=macde-builder-dev ./installer/build-live-in-docker.sh
+```
+
+Recuperar la ISO manualmente desde el contenedor persistente (si falló el copiado al host):
+
+```bash
+docker cp macde-live-builder-amd64:/cache/workdir/macde-build/build/images/live/macde-live-amd64-amd64.hybrid.iso ./build/images/live/
+```
 
 En Mac Apple Silicon, la emulación `amd64` sigue siendo más lenta que en host x86_64.
 
