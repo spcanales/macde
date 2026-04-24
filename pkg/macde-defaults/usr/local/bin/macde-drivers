@@ -4,8 +4,8 @@ set -eu
 DRIVER_HELPER="/usr/sbin/isenkram-autoinstall-firmware"
 
 if [ ! -x "$DRIVER_HELPER" ]; then
-  if command -v kdialog >/dev/null 2>&1; then
-    kdialog --error "isenkram no está instalado."
+  if command -v zenity >/dev/null 2>&1; then
+    zenity --error --text="isenkram no está instalado." || true
   fi
   exit 1
 fi

@@ -3,10 +3,17 @@ set -eu
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Deshabilitado en build live: en entorno amd64 emulado sobre ARM
-# termina gatillando limpieza agresiva de paquetes y rompe Plasma.
-# El look se aplica por defaults seguros en primer inicio.
-# MACDE_HEADLESS=1 /usr/share/macde/bin/macde-install-whitesur.sh
+# Keep disabled during image build (WhiteSur upstream script can trigger apt removals).
+# Enable explicitly with MACDE_ENABLE_WHITESUR=1 if needed.
+if [ "${MACDE_ENABLE_WHITESUR:-0}" = "1" ]; then
+  /usr/share/macde/bin/macde-install-whitesur.sh --system --gdm || true
+fi
+# Keep GNOME extensions from Debian packages only (avoid runtime mismatch).
+# dash-to-dock@micxgx.gmail.com and ding@rastersoft.com are installed by APT.
+
+if command -v dconf >/dev/null 2>&1; then
+  dconf update || true
+fi
 
 rm -rf /usr/share/macde/vendor
 rm -rf /var/lib/apt/lists/*

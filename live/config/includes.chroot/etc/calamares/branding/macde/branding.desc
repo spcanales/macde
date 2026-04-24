@@ -7,13 +7,13 @@ windowSize: 820px,540px
 windowPlacement: center
 
 strings:
-    productName:         MacDE
-    shortProductName:    MacDE
+    productName:         MacDE GNOME
+    shortProductName:    MacDE GNOME
     version:             Debian 12 Bookworm
     shortVersion:        12
-    versionedName:       MacDE on Debian 12 Bookworm
-    shortVersionedName:  MacDE 12
-    bootloaderEntryName: MacDE
+    versionedName:       MacDE GNOME on Debian 12 Bookworm
+    shortVersionedName:  MacDE GNOME 12
+    bootloaderEntryName: MacDE GNOME
     productUrl:          https://github.com/spcanales/macde
     supportUrl:          https://github.com/spcanales/macde
     knownIssuesUrl:      https://github.com/spcanales/macde/issues

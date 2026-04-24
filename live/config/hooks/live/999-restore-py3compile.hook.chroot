@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+if [ -f /usr/bin/py3compile.real ]; then
+  rm -f /usr/bin/py3compile
+  dpkg-divert --local --rename --remove --divert /usr/bin/py3compile.real /usr/bin/py3compile >/dev/null 2>&1 || true
+
+  if [ ! -x /usr/bin/py3compile ] && [ -f /usr/bin/py3compile.real ]; then
+    mv /usr/bin/py3compile.real /usr/bin/py3compile
+    chmod +x /usr/bin/py3compile
+  fi
+fi

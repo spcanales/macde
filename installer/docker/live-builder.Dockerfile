@@ -22,17 +22,17 @@ RUN apt-get update && apt-get install -y \
 # Evita la purga de paquetes temporales de live-build.
 RUN LB_PKG_FN=/usr/share/live/build/functions/packages.sh && \
   perl -0777 -i -pe "s@Remove_packages \\(\\)\\n\\{.*?\\n\\}\\n\\n@Remove_packages ()\\n{\\n\\treturn\\n}\\n\\n@s" "$LB_PKG_FN" && \
-  awk "/^Remove_packages \\(\\)\$/{f=1} f{print} /^Install_packages \\(\\)\$/{exit}" "$LB_PKG_FN" > /tmp/remove_packages.fn && \
-  grep -q "^[[:space:]]*return$" /tmp/remove_packages.fn && \
-  ! grep -q "apt-get remove\\|aptitude purge\\|aptitude remove" /tmp/remove_packages.fn && \
+  grep -Eq "^[[:space:]]*Remove_packages \\(\\)" "$LB_PKG_FN" && \
+  grep -Eq "^[[:space:]]*return$" "$LB_PKG_FN" && \
+  ! grep -Eq "apt-get remove|aptitude purge|aptitude remove" "$LB_PKG_FN" && \
   for LB_STAGE in \
     /usr/lib/live/build/chroot_archives \
     /usr/lib/live/build/chroot_package-lists \
     /usr/lib/live/build/chroot_preseed \
     /usr/lib/live/build/installer_debian-installer; do \
-      sed -i "s/^\\([[:space:]]*\\)Remove_packages\$/\\1: # macde skip temp package removal/" "$LB_STAGE"; \
+      sed -i "s/^[[:space:]]*Remove_packages[[:space:]]*$/: # macde skip temp package removal/" "$LB_STAGE"; \
   done && \
-  ! grep -Rsn "^[[:space:]]*Remove_packages\$" \
+  ! grep -REsn "^[[:space:]]*Remove_packages[[:space:]]*$" \
     /usr/lib/live/build/chroot_archives \
     /usr/lib/live/build/chroot_package-lists \
     /usr/lib/live/build/chroot_preseed \

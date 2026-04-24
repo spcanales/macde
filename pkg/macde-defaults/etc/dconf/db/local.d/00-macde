@@ -1,0 +1,31 @@
+[org/gnome/desktop/interface]
+color-scheme='prefer-light'
+clock-format='24h'
+enable-hot-corners=false
+font-name='Inter 10'
+document-font-name='Inter 10'
+monospace-font-name='JetBrains Mono 10'
+gtk-theme='Adwaita'
+icon-theme='Adwaita'
+cursor-theme='Adwaita'
+show-battery-percentage=true
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/macde-mountain.svg'
+picture-uri-dark='file:///usr/share/backgrounds/macde-mountain.svg'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/macde-mountain.svg'
+
+[org/gnome/desktop/wm/preferences]
+button-layout='close,minimize,maximize:'
+theme='Adwaita'
+
+[org/gnome/desktop/peripherals/touchpad]
+tap-to-click=true
+natural-scroll=true
+click-method='fingers'
+
+[org/gnome/mutter]
+dynamic-workspaces=true
+workspaces-only-on-primary=false

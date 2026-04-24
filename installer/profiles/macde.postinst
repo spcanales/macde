@@ -11,7 +11,7 @@ if [ -f "$EXTRA_DEB" ]; then
   rm -f "$TARGET/root/macde-defaults_all.deb"
 fi
 
-chroot "$TARGET" systemctl enable sddm.service || true
+chroot "$TARGET" systemctl enable gdm.service || true
 chroot "$TARGET" systemctl enable NetworkManager.service || true
 chroot "$TARGET" systemctl enable tlp.service || true
 chroot "$TARGET" systemctl enable mbpfan.service || true

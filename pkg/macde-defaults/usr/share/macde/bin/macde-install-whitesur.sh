@@ -6,37 +6,25 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+INSTALL_GDM=0
+for arg in "$@"; do
+  case "$arg" in
+    --gdm) INSTALL_GDM=1 ;;
+    --system) : ;;
+  esac
+done
+
 WORKDIR="$(mktemp -d)"
 VENDOR_DIR="/usr/share/macde/vendor"
-FAKEBIN_DIR="$WORKDIR/fakebin"
-HEADLESS_MODE="${MACDE_HEADLESS:-0}"
 trap 'rm -rf "$WORKDIR"' EXIT INT TERM
 
-install_sddm_themes() {
-  repo_dir="$1"
-  theme_src="$repo_dir/WhiteSur-5.0"
-  images_dir="$repo_dir/images"
-
-  install -d /usr/share/sddm/themes
-
-  for variant in light dark; do
-    dest="/usr/share/sddm/themes/WhiteSur-$variant"
-
-    rm -rf "$dest"
-    cp -r "$theme_src" "$dest"
-    cp "$images_dir/background-$variant.jpeg" "$dest/background.jpeg"
-    cp "$images_dir/preview-$variant.jpeg" "$dest/preview.jpeg"
-
-    sed -i "/^Name=/s/WhiteSur/WhiteSur-$variant/" "$dest/metadata.desktop"
-    sed -i "/^Theme-Id=/s/WhiteSur/WhiteSur-$variant/" "$dest/metadata.desktop"
-    sed -i "s/WhiteSur/WhiteSur-$variant/g" "$dest/Main.qml"
-  done
-}
+WHITE_SUR_GTK_URL="${WHITE_SUR_GTK_URL:-https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/7ce45b4593cc5dc0073536e48761235c4acfe477.tar.gz}"
+WHITE_SUR_ICONS_URL="${WHITE_SUR_ICONS_URL:-https://github.com/vinceliuice/WhiteSur-icon-theme/archive/bab5833b5cae200bccb786a2d3d6afa2201e7806.tar.gz}"
+WHITE_SUR_CURSORS_URL="${WHITE_SUR_CURSORS_URL:-https://github.com/vinceliuice/WhiteSur-cursors/archive/e190baf618ed95ee217d2fd45589bd309b37672b.tar.gz}"
 
 extract_archive() {
   archive="$1"
   dest="$2"
-
   mkdir -p "$dest"
   tar -xzf "$archive" -C "$dest"
 }
@@ -52,94 +40,41 @@ download_and_extract() {
 }
 
 extract_or_download() {
-  name="$1"
-  local_archive="$2"
-  url="$3"
-  dest="$4"
+  local_archive="$1"
+  url="$2"
+  dest="$3"
 
   if [ -f "$local_archive" ]; then
     extract_archive "$local_archive" "$dest"
   else
-    download_and_extract "$name" "$url" "$dest"
+    download_and_extract "$(basename "$local_archive" .tar.gz)" "$url" "$dest"
   fi
 }
 
-ensure_pkg() {
-  if ! dpkg -s "$1" >/dev/null 2>&1; then
-    MISSING_PKGS="${MISSING_PKGS:-} $1"
-  fi
-}
+extract_or_download "$VENDOR_DIR/whitesur-gtk.tar.gz" "$WHITE_SUR_GTK_URL" "$WORKDIR"
+extract_or_download "$VENDOR_DIR/whitesur-icons.tar.gz" "$WHITE_SUR_ICONS_URL" "$WORKDIR"
+extract_or_download "$VENDOR_DIR/whitesur-cursors.tar.gz" "$WHITE_SUR_CURSORS_URL" "$WORKDIR"
 
-for pkg in curl ca-certificates qt5-style-kvantum; do
-  ensure_pkg "$pkg"
-done
-
-if [ "$HEADLESS_MODE" != "1" ]; then
-  for pkg in sassc libglib2.0-dev-bin libxml2-utils; do
-    ensure_pkg "$pkg"
-  done
+install -d /usr/share/backgrounds
+if [ -f /usr/share/macde/wallpapers/mountain.svg ]; then
+  cp -f /usr/share/macde/wallpapers/mountain.svg /usr/share/backgrounds/macde-mountain.svg
 fi
 
-if [ -n "${MISSING_PKGS:-}" ]; then
-  apt-get update
-  apt-get install -y $MISSING_PKGS
+cd "$WORKDIR"/WhiteSur-gtk-theme-*
+./install.sh -d /usr/share/themes -c light -N stable --shell --silent-mode
+
+if [ "$INSTALL_GDM" = "1" ] && [ -x ./tweaks.sh ]; then
+  ./tweaks.sh -g -b /usr/share/backgrounds/macde-mountain.svg --silent-mode || true
 fi
 
-extract_or_download \
-  "whitesur-kde" \
-  "$VENDOR_DIR/whitesur-kde.tar.gz" \
-  "https://github.com/vinceliuice/WhiteSur-kde/archive/refs/heads/master.tar.gz" \
-  "$WORKDIR"
-extract_or_download \
-  "whitesur-icons" \
-  "$VENDOR_DIR/whitesur-icons.tar.gz" \
-  "https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/heads/master.tar.gz" \
-  "$WORKDIR"
-extract_or_download \
-  "whitesur-cursors" \
-  "$VENDOR_DIR/whitesur-cursors.tar.gz" \
-  "https://github.com/vinceliuice/WhiteSur-cursors/archive/refs/heads/master.tar.gz" \
-  "$WORKDIR"
-extract_or_download \
-  "whitesur-gtk" \
-  "$VENDOR_DIR/whitesur-gtk.tar.gz" \
-  "https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/refs/heads/master.tar.gz" \
-  "$WORKDIR"
-
-export QT_QPA_PLATFORM=offscreen
-export HOME=/root
-export USER=root
-export LOGNAME=root
-
-install -d "$FAKEBIN_DIR"
-cat > "$FAKEBIN_DIR/logname" <<'EOF'
-#!/bin/sh
-echo "${LOGNAME:-root}"
-EOF
-chmod +x "$FAKEBIN_DIR/logname"
-export PATH="$FAKEBIN_DIR:$PATH"
-
-cd "$WORKDIR/WhiteSur-kde-master"
-./install.sh -c light -w default
-install_sddm_themes "$WORKDIR/WhiteSur-kde-master/sddm"
-
-if [ "$HEADLESS_MODE" != "1" ]; then
-  cd "$WORKDIR/WhiteSur-gtk-theme-master"
-  ./install.sh -d /usr/share/themes -c light -o normal
-fi
-
-cd "$WORKDIR/WhiteSur-icon-theme-master"
+cd "$WORKDIR"/WhiteSur-icon-theme-*
 ./install.sh -d /usr/share/icons -a
 
-cd "$WORKDIR/WhiteSur-cursors-master"
+cd "$WORKDIR"/WhiteSur-cursors-*
 ./install.sh
 
-install -d /etc/sddm.conf.d
-cat > /etc/sddm.conf.d/macde-whitesur.conf <<'EOF'
-[Theme]
-Current=breeze
-EOF
+if command -v glib-compile-schemas >/dev/null 2>&1; then
+  glib-compile-schemas /usr/share/glib-2.0/schemas || true
+fi
 
-echo
-echo "WhiteSur instalado."
-echo "En el siguiente inicio de sesion KDE se aplicara el tema global."
+echo "WhiteSur GTK/Shell/Icons/Cursors instalado."

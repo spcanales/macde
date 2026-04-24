@@ -25,7 +25,7 @@ Presentation
             width: 620
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.Center
-            text: qsTr("MacDE installs Debian 12 with KDE Plasma tuned for a MacBook Pro 2012.<br/>The live desktop is already themed and the installed system keeps the same look.")
+            text: qsTr("MacDE installs Debian 12 with GNOME tuned for Intel MacBook 2011-2012.<br/>The live desktop is ready and the installed system keeps the same UX profile.")
         }
     }
 
@@ -46,7 +46,7 @@ Presentation
                 width: parent.width
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
-                text: qsTr("Top bar, dock, WhiteSur global theme, icons, cursors and a light login screen are already configured.")
+                text: qsTr("Top bar, bottom dock, fonts, wallpaper, and a clean GNOME profile are preconfigured.")
             }
 
             Text {
