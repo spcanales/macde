@@ -1,17 +1,33 @@
 # MacDE Live ISO (GNOME)
 
-ISO live `amd64` basada en Debian 12 (Bookworm) para MacBook Intel 2011-2012, con GNOME (Wayland por defecto), UX estilo macOS, Calamares y build reproducible.
+ISO live `amd64` basada en Debian 12 (Bookworm) para MacBook Intel 2011-2012, con GNOME, Calamares y build reproducible.
 
 ## Estado actual
 
 - Escritorio: GNOME (`gdm3`, `gnome-shell`, `gnome-control-center`, `task-gnome-desktop`).
-- Look base estable: Adwaita + dock inferior (`dash-to-dock`) + top bar limpia + wallpaper Mountain.
-- WhiteSur: opcional (no forzado en build para evitar inestabilidad).
-- Apps incluidas: Firefox, VLC, LibreOffice, Synaptic.
-- Hardware Mac Intel: Broadcom STA + firmware, `hid_apple fnmode=2`, `tlp`, `mbpfan`, `fwupd`, touchpad libinput.
-- Instalador: Calamares con branding MacDE GNOME y acceso directo en el escritorio live.
+- Sesión gráfica por defecto: Xorg (`WaylandEnable=false` en GDM para estabilidad en hardware/vm antiguos).
+- Look base: Adwaita + dock inferior (`dash-to-dock`) + DING + wallpaper Mountain.
+- WhiteSur: opcional (no forzado en build).
+- Apps incluidas: Firefox, GNOME Notes (`bijiben`), VLC, LibreOffice, Synaptic.
+- Instalador: Calamares con branding MacDE GNOME, links de soporte al repo y acceso directo en escritorio live (trusted).
 
-## Estructura
+## Política Wi-Fi Broadcom
+
+- Driver objetivo: `broadcom-sta-common` + `broadcom-sta-dkms` (`wl`).
+- Se purga `b43` userland: `firmware-b43-installer`, `firmware-b43legacy-installer`, `b43-fwcutter`, `b43-openfwwf`.
+- Se elimina `/lib/firmware/b43` del live/target.
+- Se aplica blacklist en `/etc/modprobe.d/macde-broadcom-wl.conf`:
+  - `b43`, `b43legacy`, `ssb`, `bcma`, `brcmsmac`, `brcmfmac`.
+
+## Limpieza KDE en ISO GNOME
+
+- Se purgan `systemsettings` y `kactivitymanagerd`.
+- Se ocultan launchers KDE residuales en GNOME:
+  - `org.kde*.desktop`
+  - `gnome-system-monitor-kde.desktop`
+  - iconos `systemsettings_*` del catálogo.
+
+## Estructura relevante
 
 ```text
 installer/
@@ -20,11 +36,14 @@ installer/
   build-live-builder-image.sh
   docker/live-builder.Dockerfile
   clean-build.sh
+  profiles/macde.postinst
 live/config/
   package-lists/macde.list.chroot
   hooks/live/010-install-whitesur.hook.chroot
+  hooks/live/020-prune-kde-and-b43.hook.chroot
   hooks/live/999-restore-py3compile.hook.chroot
   includes.chroot/etc/calamares/branding/macde/*
+  includes.chroot/etc/modprobe.d/macde-broadcom-wl.conf
 pkg/macde-defaults/
   DEBIAN/{control,postinst}
   etc/dconf/{profile/user,db/local.d/00-macde}
@@ -47,7 +66,7 @@ Salida:
 - `build/macde-defaults_all.deb`
 - `build/images/live/macde-live-amd64-amd64.hybrid.iso`
 
-El contenedor `linux/amd64` es persistente por defecto (`macde-live-builder-amd64`) y reutiliza cachés en `build/docker-cache/` (`apt-cache`, `apt-lists`, `live-build-cache`, `theme-cache`, `workdir`).
+El contenedor `linux/amd64` es persistente por defecto (`macde-live-builder-amd64`) y reutiliza cachés en `build/docker-cache/`.
 
 ## Variables útiles
 
@@ -78,16 +97,16 @@ ISO="/Users/sergio/Downloads/linux/macde/build/images/live/macde-live-amd64-amd6
 
 - Sistema (`dconf`): `pkg/macde-defaults/etc/dconf/db/local.d/00-macde`
 - Sesión usuario (primer login): `pkg/macde-defaults/usr/local/bin/macde-firstboot.sh`
-- Dock: abajo, autohide/intellihide, favoritos con Firefox/VLC/LibreOffice.
+- Dock: abajo, autohide/intellihide, iconos pequeños DING y favoritos:
+  - Firefox
+  - Notes
+  - Files
+  - Terminal
+  - Settings
+  - VLC
+  - LibreOffice Writer
 - Botones ventana: izquierda.
 - Fuentes: Inter + JetBrains Mono.
-- Fallback seguro: Adwaita por defecto; WhiteSur sólo opcional.
-
-## Drivers/Firmware
-
-- Wi-Fi Broadcom 2011-2012: `broadcom-sta-dkms`, `firmware-brcm80211`, `linux-headers-amd64`.
-- Asistente de firmware faltante: app `Drivers and Firmware` (`macde-drivers` + `isenkram-autoinstall-firmware`).
-- Ajustes Mac: `hid_apple fnmode=2`, touchpad libinput, `tlp` y `mbpfan`.
 
 ## Limpieza
 
