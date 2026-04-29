@@ -5,8 +5,8 @@ STATE_DIR="$HOME/.local/state/macde"
 MARKER="$STATE_DIR/gnome-session-init.done"
 WALLPAPER_FILE="/usr/share/backgrounds/macde-mountain.svg"
 INSTALLER_DESKTOP_SOURCE="/usr/share/applications/install-debian.desktop"
-INSTALLER_DESKTOP_NAME="Install MacDE GNOME.desktop"
-EXTENSIONS="['dash-to-dock@micxgx.gmail.com']"
+INSTALLER_DESKTOP_NAME="Install MacDE.desktop"
+EXTENSIONS="['dash-to-dock@micxgx.gmail.com', 'ding@rastersoft.com']"
 FAVORITES="['firefox-esr.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop', 'vlc.desktop', 'libreoffice-writer.desktop']"
 GTK_THEME="Adwaita"
 ICON_THEME="Adwaita"
@@ -25,13 +25,55 @@ pick_theme_fallback() {
   done
 }
 
+resolve_desktop_dir() {
+  desktop_dir=""
+  if command -v xdg-user-dir >/dev/null 2>&1; then
+    desktop_dir="$(xdg-user-dir DESKTOP 2>/dev/null || true)"
+  fi
+
+  case "$desktop_dir" in
+    ""|"$HOME")
+      if [ -d "$HOME/Desktop" ] || [ ! -e "$HOME/Desktop" ]; then
+        desktop_dir="$HOME/Desktop"
+      else
+        desktop_dir="$HOME/Escritorio"
+      fi
+      ;;
+  esac
+
+  printf '%s\n' "$desktop_dir"
+}
+
+mark_trusted_desktop_file() {
+  desktop_file="$1"
+  [ -f "$desktop_file" ] || return 0
+  chmod +x "$desktop_file" || true
+  if command -v gio >/dev/null 2>&1; then
+    gio set "$desktop_file" metadata::trusted true >/dev/null 2>&1 || true
+  fi
+}
+
+remove_duplicate_installer_shortcuts() {
+  desktop_dir="$1"
+  canonical="$desktop_dir/$INSTALLER_DESKTOP_NAME"
+  [ -d "$desktop_dir" ] || return 0
+
+  for candidate in "$desktop_dir"/*.desktop; do
+    [ -e "$candidate" ] || continue
+    [ "$candidate" = "$canonical" ] && continue
+    if grep -q '^Exec=install-debian' "$candidate" >/dev/null 2>&1; then
+      rm -f "$candidate"
+    fi
+  done
+}
+
 ensure_installer_shortcut() {
   [ -f "$INSTALLER_DESKTOP_SOURCE" ] || return 0
-  for desktop_dir in "$HOME/Desktop" "$HOME/Escritorio"; do
-    mkdir -p "$desktop_dir"
-    cp -f "$INSTALLER_DESKTOP_SOURCE" "$desktop_dir/$INSTALLER_DESKTOP_NAME"
-    chmod +x "$desktop_dir/$INSTALLER_DESKTOP_NAME" || true
-  done
+  desktop_dir="$(resolve_desktop_dir)"
+  mkdir -p "$desktop_dir"
+  cp -f "$INSTALLER_DESKTOP_SOURCE" "$desktop_dir/$INSTALLER_DESKTOP_NAME"
+  mark_trusted_desktop_file "$desktop_dir/$INSTALLER_DESKTOP_NAME"
+  remove_duplicate_installer_shortcuts "$desktop_dir"
 }
 
 set_if_possible() {
@@ -76,6 +118,7 @@ if command -v gsettings >/dev/null 2>&1; then
   set_if_possible org.gnome.shell.extensions.dash-to-dock show-show-apps-button "false"
   set_if_possible org.gnome.shell.extensions.dash-to-dock transparency-mode "'DYNAMIC'"
   set_if_possible org.gnome.shell.extensions.dash-to-dock animation-time "0.15"
+  set_if_possible org.gnome.shell.extensions.ding icon-size "'small'"
 fi
 
 touch "$MARKER"

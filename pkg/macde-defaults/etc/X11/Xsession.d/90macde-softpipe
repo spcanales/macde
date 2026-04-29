@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Keep VM boots stable in emulated/virtualized GPUs where llvmpipe can fail.
+if [ -r /sys/class/dmi/id/product_name ]; then
+  case "$(cat /sys/class/dmi/id/product_name 2>/dev/null)" in
+    *QEMU*|*KVM*|*Bochs*|*VirtualBox*|*VMware*|*Parallels*)
+      export LIBGL_ALWAYS_SOFTWARE=1
+      export GALLIUM_DRIVER=softpipe
+      export MESA_LOADER_DRIVER_OVERRIDE=softpipe
+      ;;
+  esac
+fi

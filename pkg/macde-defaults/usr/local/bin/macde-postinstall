@@ -4,10 +4,36 @@ set -eu
 WALLPAPER_SRC="/usr/share/macde/wallpapers/mountain.svg"
 WALLPAPER_DST="/usr/share/backgrounds/macde-mountain.svg"
 
+configure_gdm_xorg_default() {
+  conf="/etc/gdm3/daemon.conf"
+  [ -d /etc/gdm3 ] || return 0
+
+  if [ ! -f "$conf" ]; then
+    cat >"$conf" <<'EOF'
+[daemon]
+WaylandEnable=false
+EOF
+    return 0
+  fi
+
+  if grep -q '^[[:space:]]*#*[[:space:]]*WaylandEnable=' "$conf"; then
+    sed -i 's/^[[:space:]]*#*[[:space:]]*WaylandEnable=.*/WaylandEnable=false/' "$conf"
+    return 0
+  fi
+
+  if grep -q '^[[:space:]]*\[daemon\][[:space:]]*$' "$conf"; then
+    sed -i '/^[[:space:]]*\[daemon\][[:space:]]*$/a WaylandEnable=false' "$conf"
+  else
+    printf '\n[daemon]\nWaylandEnable=false\n' >>"$conf"
+  fi
+}
+
 if [ -f "$WALLPAPER_SRC" ]; then
   install -d /usr/share/backgrounds
   cp -f "$WALLPAPER_SRC" "$WALLPAPER_DST"
 fi
+
+configure_gdm_xorg_default
 
 # Keep disabled by default; enable with MACDE_ENABLE_WHITESUR=1 if desired.
 if [ "${MACDE_ENABLE_WHITESUR:-0}" = "1" ] && [ -x /usr/share/macde/bin/macde-install-whitesur.sh ]; then

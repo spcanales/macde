@@ -31,7 +31,6 @@ xserver-xorg-input-synaptics
 wireplumber
 vlc
 fwupd
-linux-headers-amd64
 dkms
 broadcom-sta-common
 broadcom-sta-dkms

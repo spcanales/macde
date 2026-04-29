@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILDER_IMAGE="${MACDE_LIVE_BUILDER_IMAGE:-macde/live-builder:bookworm-amd64}"
 CONTAINER_NAME="${MACDE_LIVE_BUILDER_CONTAINER:-macde-live-builder-amd64}"
 PERSISTENT_CONTAINER="${MACDE_DOCKER_PERSISTENT:-1}"
+BUILD_ROOT_IN_CONTAINER="${MACDE_BUILD_ROOT:-/var/cache/macde/workdir/macde-build}"
 DOCKER_CACHE_DIR="$ROOT_DIR/build/docker-cache"
 APT_CACHE_DIR="$DOCKER_CACHE_DIR/apt-cache"
 APT_LISTS_DIR="$DOCKER_CACHE_DIR/apt-lists"
@@ -36,7 +37,7 @@ if [ "${MACDE_DOCKER_RECREATE:-0}" = "1" ]; then
 fi
 
 build_cmd='
-  BUILD_ROOT="${MACDE_BUILD_ROOT:-/cache/workdir/macde-build}"
+  BUILD_ROOT="${MACDE_BUILD_ROOT:-/var/cache/macde/workdir/macde-build}"
   mkdir -p "$BUILD_ROOT" /work/build/images/live
   rsync -a --delete /work/ "$BUILD_ROOT"/
 
@@ -56,7 +57,7 @@ if [ "$PERSISTENT_CONTAINER" = "1" ]; then
       --platform linux/amd64 \
       -e MACDE_LB_CACHE_DIR=/cache/live-build \
       -e MACDE_THEME_CACHE_DIR=/cache/theme \
-      -e MACDE_BUILD_ROOT=/cache/workdir/macde-build \
+      -e MACDE_BUILD_ROOT="$BUILD_ROOT_IN_CONTAINER" \
       -v "$ROOT_DIR:/work" \
       -v "$APT_CACHE_DIR:/var/cache/apt" \
       -v "$APT_LISTS_DIR:/var/lib/apt/lists" \
@@ -84,7 +85,7 @@ if [ "$PERSISTENT_CONTAINER" = "1" ]; then
     -e WHITE_SUR_GTK_URL="${WHITE_SUR_GTK_URL:-}" \
     -e MACDE_LB_CACHE_DIR=/cache/live-build \
     -e MACDE_THEME_CACHE_DIR=/cache/theme \
-    -e MACDE_BUILD_ROOT=/cache/workdir/macde-build \
+    -e MACDE_BUILD_ROOT="$BUILD_ROOT_IN_CONTAINER" \
     "$CONTAINER_NAME" \
     bash -lc "$build_cmd"
 else
@@ -102,7 +103,7 @@ else
     -e WHITE_SUR_GTK_URL="${WHITE_SUR_GTK_URL:-}" \
     -e MACDE_LB_CACHE_DIR=/cache/live-build \
     -e MACDE_THEME_CACHE_DIR=/cache/theme \
-    -e MACDE_BUILD_ROOT=/cache/workdir/macde-build \
+    -e MACDE_BUILD_ROOT="$BUILD_ROOT_IN_CONTAINER" \
     -v "$ROOT_DIR:/work" \
     -v "$APT_CACHE_DIR:/var/cache/apt" \
     -v "$APT_LISTS_DIR:/var/lib/apt/lists" \
