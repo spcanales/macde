@@ -18,6 +18,7 @@ synaptic
 xserver-xorg-input-synaptics
 fonts-inter
 fonts-jetbrains-mono
+bijiben
 xserver-xorg
 xwayland
 xdg-desktop-portal-gnome
@@ -30,7 +31,6 @@ fwupd
 dkms
 broadcom-sta-common
 broadcom-sta-dkms
-firmware-brcm80211
 wireless-tools
 intel-microcode
 efibootmgr

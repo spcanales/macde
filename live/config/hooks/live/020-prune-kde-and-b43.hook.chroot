@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+export DEBIAN_FRONTEND=noninteractive
+
+purge_if_installed() {
+  pkg="$1"
+  if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+    apt-get purge -y "$pkg"
+  fi
+}
+
+# Keep Calamares and required KDE Framework runtime, but remove KDE desktop apps.
+for pkg in systemsettings kactivitymanagerd; do
+  purge_if_installed "$pkg"
+done
+
+# Force Broadcom wl path only: remove b43 userland/firmware installers if present.
+for pkg in firmware-b43-installer firmware-b43legacy-installer b43-fwcutter b43-openfwwf; do
+  purge_if_installed "$pkg"
+done
+
+# Hide KDE launchers from GNOME UX (keep runtime libs required by Calamares/Qt stack).
+rm -f /usr/share/applications/systemsettings.desktop || true
+rm -f /usr/share/applications/org.kde*.desktop || true
+rm -f /usr/share/applications/gnome-system-monitor-kde.desktop || true
+rm -f /var/lib/swcatalog/icons/*/*/systemsettings_*.png || true
+
+# Extra safety: if any b43 firmware tree exists, remove it.
+rm -rf /lib/firmware/b43 || true
+
+rm -rf /var/lib/apt/lists/*

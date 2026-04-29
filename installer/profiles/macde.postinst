@@ -11,6 +11,28 @@ if [ -f "$EXTRA_DEB" ]; then
   rm -f "$TARGET/root/macde-defaults_all.deb"
 fi
 
+# Keep installer runtime libs, remove KDE desktop apps.
+chroot "$TARGET" apt-get -y purge systemsettings kactivitymanagerd || true
+
+# Broadcom policy: use wl (broadcom-sta-dkms), avoid b43 stack conflicts.
+chroot "$TARGET" apt-get -y purge firmware-b43-installer firmware-b43legacy-installer b43-fwcutter b43-openfwwf || true
+chroot "$TARGET" rm -rf /lib/firmware/b43 || true
+
+cat > "$TARGET/etc/modprobe.d/macde-broadcom-wl.conf" <<'EOF'
+blacklist b43
+blacklist b43legacy
+blacklist ssb
+blacklist bcma
+blacklist brcmsmac
+blacklist brcmfmac
+EOF
+
+# Keep runtime Qt/KF pieces if needed by Calamares, but hide KDE launchers.
+rm -f "$TARGET/usr/share/applications/systemsettings.desktop" || true
+rm -f "$TARGET/usr/share/applications/org.kde"*.desktop || true
+rm -f "$TARGET/usr/share/applications/gnome-system-monitor-kde.desktop" || true
+rm -f "$TARGET/var/lib/swcatalog/icons"/*/*/systemsettings_*.png || true
+
 chroot "$TARGET" systemctl enable gdm.service || true
 chroot "$TARGET" systemctl enable NetworkManager.service || true
 chroot "$TARGET" systemctl enable tlp.service || true

@@ -4,6 +4,7 @@ brightnessctl
 curl
 ca-certificates
 firefox-esr
+bijiben
 fonts-inter
 fonts-jetbrains-mono
 gdm3
@@ -36,7 +37,6 @@ broadcom-sta-common
 broadcom-sta-dkms
 wireless-tools
 intel-microcode
-firmware-brcm80211
 efibootmgr
 tlp
 tlp-rdw

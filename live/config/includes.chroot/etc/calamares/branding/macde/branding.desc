@@ -15,7 +15,7 @@ strings:
     shortVersionedName:  MacDE GNOME 12
     bootloaderEntryName: MacDE GNOME
     productUrl:          https://github.com/spcanales/macde
-    supportUrl:          https://github.com/spcanales/macde
+    supportUrl:          https://github.com/spcanales/macde/issues
     knownIssuesUrl:      https://github.com/spcanales/macde/issues
     releaseNotesUrl:     https://github.com/spcanales/macde/releases
     donateUrl:           https://github.com/spcanales/macde
